@@ -1,0 +1,13 @@
+frontend/node_modules/
+frontend/dist/
+data/.tmp-*
+data/.*.recalc
+data/~$*
+data/.~*.twbr
+.DS_Store
+backend/netflix-backend
+backend/netflix-backend.exe
+
+# ไฟล์ Tableau รุ่นเก่า (ไม่ต้องส่ง)
+old_tableau_versions/
+**/.DS_Store

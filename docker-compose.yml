@@ -1,0 +1,37 @@
+# รันทั้งระบบ: docker compose up --build   แล้วเปิด http://localhost:8080
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: netflix
+      MYSQL_USER: netflix
+      MYSQL_PASSWORD: netflix
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Bangkok
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3308:3306"          # ต่อด้วย MySQL Workbench / DBeaver ที่ localhost:3308 (user netflix / pass netflix) — ใช้ 3308 เพราะ 3306 มักมี MySQL ตัวอื่นใช้อยู่
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_DSN: "netflix:netflix@tcp(mysql:3306)/netflix?charset=utf8mb4"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data         # ไฟล์ Excel อยู่ที่ data/netflix_data.xlsx บนเครื่องคุณ แก้ใน Excel ได้เลย
+
+volumes:
+  mysql-data:
