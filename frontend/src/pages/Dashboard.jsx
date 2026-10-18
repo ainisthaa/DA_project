@@ -161,7 +161,7 @@ export function Card({ title, note, children, actions }) {
           <h2>{title}</h2>
           {note && <p className="note">{note}</p>}
         </div>
-        {actions}
+        {actions && <div className="card-actions">{actions}</div>}
       </div>
       {children}
     </section>

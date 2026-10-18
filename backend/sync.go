@@ -313,8 +313,12 @@ func (m *SyncManager) recalcExcel() error {
 	defer os.RemoveAll(outDir)
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
+	profileDir := filepath.Join(os.TempDir(), "lo_profile_netflix")
+	if err := ensureRecalcOnLoad(profileDir); err != nil {
+		return fmt.Errorf("ตั้งค่า LibreOffice ไม่ได้: %v", err)
+	}
 	// LibreOffice ต้องการ path แบบ URL: file:///tmp/... (Linux/Mac) หรือ file:///C:/... (Windows)
-	profile := "file://" + filepath.ToSlash(filepath.Join(os.TempDir(), "lo_profile_netflix"))
+	profile := "file://" + filepath.ToSlash(profileDir)
 	if !strings.HasPrefix(profile, "file:///") {
 		profile = strings.Replace(profile, "file://", "file:///", 1)
 	}
@@ -329,6 +333,44 @@ func (m *SyncManager) recalcExcel() error {
 		return fmt.Errorf("LibreOffice ไม่ได้สร้างไฟล์: %s", strings.TrimSpace(string(out)))
 	}
 	return copyReplace(produced, m.path)
+}
+
+// ค่าเริ่มต้นของ LibreOffice คือ "ไม่คำนวณสูตรใหม่ตอนเปิดไฟล์ .xlsx" (ใช้ค่าที่เก็บไว้ในไฟล์)
+// ทำให้ sheet2–4 ไม่เปลี่ยนตาม sheet1 → ตั้ง OOXMLRecalcMode = 0 (คำนวณใหม่เสมอ) ในโปรไฟล์ที่ใช้
+const recalcItem = `<item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="OOXMLRecalcMode" oor:op="fuse"><value>0</value></prop></item>`
+
+func ensureRecalcOnLoad(profileDir string) error {
+	userDir := filepath.Join(profileDir, "user")
+	if err := os.MkdirAll(userDir, 0o755); err != nil {
+		return err
+	}
+	f := filepath.Join(userDir, "registrymodifications.xcu")
+	data, err := os.ReadFile(f)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		data = []byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+			`<oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` + "\n</oor:items>\n")
+	}
+	s := string(data)
+	if strings.Contains(s, recalcItem) {
+		return nil
+	}
+	// ลบค่าเดิมของ OOXMLRecalcMode (ถ้ามี) แล้วใส่ค่าใหม่ก่อน </oor:items>
+	var kept []string
+	for _, line := range strings.Split(s, "\n") {
+		if !strings.Contains(line, `oor:name="OOXMLRecalcMode"`) {
+			kept = append(kept, line)
+		}
+	}
+	s = strings.Join(kept, "\n")
+	i := strings.LastIndex(s, "</oor:items>")
+	if i < 0 {
+		return fmt.Errorf("ไฟล์ %s ผิดรูปแบบ", f)
+	}
+	s = s[:i] + recalcItem + "\n" + s[i:]
+	return os.WriteFile(f, []byte(s), 0o644)
 }
 
 func copyReplace(src, dst string) error {

@@ -357,3 +357,29 @@
   เพราะมี container `lineoa_mysql` ของโปรเจกต์อื่นใช้ 3306 อยู่ (ไม่ได้ไปหยุดของโปรเจกต์อื่น)
 - แก้ `docker-compose.yml` ให้ map MySQL ฝั่งเครื่องเป็น **3308** (app ต่อ `mysql:3306` ภายใน network ของ Docker เหมือนเดิม)
 - ผล: app ขึ้นใน ~10 วินาที, นำเข้า Excel → DB 17,370 แถว, `/api/settings` คืนลิงก์ Tableau 2 อัน, `/api/tableau` เห็นภาพ 2 ภาพ + `tableau_netflix2.twbx`, หน้าเว็บ 200 ✅
+
+## 16. ทดสอบเพิ่ม/ลบข้อมูลผ่านหน้าเว็บ + แก้บั๊กสูตร Excel ไม่คำนวณใหม่ (19 ต.ค. 2026)
+
+ผู้ใช้ถามว่าเว็บเพิ่ม row ลง Excel ได้หรือยัง → ทดสอบจริงผ่านหน้าเว็บ (Playwright + Chrome) บนระบบ Docker
+
+| ขั้น | ผล |
+|---|---|
+| เมนู **จัดการข้อมูล → + เพิ่มข้อมูล** กรอก "TEST ROW from web" → บันทึก | ได้ ID 17371, แถวขึ้นท้าย `sheet1_RawData` ใน `data/netflix_data.xlsx` ภายใน ~6 วินาที ✅ |
+| ปุ่ม **ลบ** | แถวหายจาก Excel กลับเป็น 17,370 ✅ |
+| ค่าใน sheet2–4 หลังเพิ่มแถว | ❌ **บั๊ก**: log บอก "คำนวณสูตร sheet2–4 ใหม่แล้ว" แต่ Total Titles ยังเป็น 17,370 |
+
+**สาเหตุ**: LibreOffice (รุ่นใน Debian bookworm) ตั้งค่าเริ่มต้น *Recalculation on File Load* ของไฟล์ Excel เป็น "ไม่คำนวณใหม่"
+→ `soffice --convert-to` จึงเขียนค่าเดิมที่เก็บในไฟล์กลับไป (ตอนพัฒนาครั้งแรกใช้ LibreOffice คนละรุ่น/คนละโปรไฟล์ จึงไม่เจอ)
+
+**แก้** (`backend/sync.go`): `ensureRecalcOnLoad()` เขียน `OOXMLRecalcMode = 0` (คำนวณใหม่เสมอ) ลง `registrymodifications.xcu` ของโปรไฟล์ LibreOffice ก่อนรันทุกครั้ง (สร้างไฟล์ให้ถ้ายังไม่มี)
+
+**ทดสอบหลังแก้** (container ใหม่ โปรไฟล์ว่าง): เพิ่ม 2 แถว → sheet4 Total Titles = 17,372, Average Views = 1,372,346 **ตรงกับ `/api/stats` ของ DB** ✅ → ลบ 2 แถว → กลับเป็น 17,370 / 1,346,598 ✅
+
+แก้เพิ่ม: ปุ่มบนหัว Card (เช่น "เปิดใน Tableau" + "ดาวน์โหลด") เคยแยกกันคนละฝั่ง → รวมไว้ใน `.card-actions` ชิดขวา
+
+## 17. คู่มือผู้ใช้ .docx + ภาพหน้าจอที่ขาด (19 ต.ค. 2026)
+
+- ถ่ายภาพหน้าจอจริงด้วย Playwright (ใช้ Chrome ในเครื่อง): `15_web_charts.png` (แท็บ Tableau แบบโต้ตอบ), `16_web_charts_image.png` (แท็บภาพ)
+- `13_tableau_overview.png`, `14_tableau_details.png` = ภาพ Dashboard ที่ render จาก Tableau Public → ไม่มีช่อง `[ใส่ภาพหน้าจอ]` เหลือในคู่มือ
+- แผนภาพระบบแบบตัวอักษร (ASCII) เพี้ยนเมื่อมีภาษาไทย → เปลี่ยนเป็นตารางลำดับการไหลของข้อมูล 6 ขั้น
+- แปลง `docs/USER_MANUAL.md` → **`docs/USER_MANUAL.docx`** ด้วย pandoc 3.11 (Docker) + แม่แบบ `docs/reference.docx` (Tahoma, ตารางมีเส้นขอบ/หัวตารางตัวหนา, ภาษา bidi = th-TH) · ภาพฝังครบ 15 ภาพ · ตรวจหน้าตาโดยแปลงเป็น PDF ด้วย LibreOffice Writer (20 หน้า)

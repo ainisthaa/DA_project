@@ -39,7 +39,7 @@ netflix-project/
 | Excel: ข้อมูลดิบ (sheet1), ข้อมูลที่คำนวณ (sheet2), อื่นๆ (sheet3–4) | `data/netflix_data.xlsx` |
 | ตัว Tableau | `data/tableau_netflix2.twbx` (ขั้นตอน + รายการที่ควรแก้อยู่ใน `tableau/TABLEAU_GUIDE.md`) |
 | Program | โฟลเดอร์ `backend/`, `frontend/`, `docker-compose.yml` |
-| User manual พร้อมภาพหน้าจอ | `docs/USER_MANUAL.md` + `docs/images/` |
+| User manual พร้อมภาพหน้าจอ | **`docs/USER_MANUAL.docx`** (Word) · ต้นฉบับ `docs/USER_MANUAL.md` + `docs/images/` |
 
 ## สร้างไฟล์ Excel ใหม่จากต้นฉบับ (ถ้าต้องการ)
 
@@ -53,3 +53,12 @@ python scripts/build_excel.py source/Netflix_What_We_Watched_2026Jan-Jun_origina
 
 Netflix. (2026, July 16). *What We Watched: A Netflix Engagement Report (January–June 2026)*.
 https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026
+
+## สร้างคู่มือ .docx ใหม่ (หลังแก้ `docs/USER_MANUAL.md`)
+
+ใช้ pandoc ผ่าน Docker (ไม่ต้องติดตั้งเพิ่ม) · `docs/reference.docx` คือแม่แบบ (ฟอนต์ Tahoma รองรับภาษาไทย, ตารางมีเส้นขอบ)
+
+```bash
+docker run --rm -v "$PWD":/proj -w /proj/docs pandoc/core:latest USER_MANUAL.md -f gfm -t docx \
+  --reference-doc=reference.docx --resource-path=/proj/docs:/proj -o USER_MANUAL.docx
+```

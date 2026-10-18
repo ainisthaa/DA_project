@@ -3,8 +3,7 @@
 ระบบจัดการและวิเคราะห์ข้อมูลยอดดู Netflix (What We Watched, ม.ค.–มิ.ย. 2026)
 ข้อมูลไหลครบวงจร: **หน้าเว็บ ↔ MySQL ↔ Excel → Tableau → หน้าเว็บ**
 
-> ภาพหน้าจอในคู่มือนี้ถ่ายจากระบบจริงระหว่างทดสอบ (ไฟล์อยู่ใน `docs/images/`)
-> ถ้าอาจารย์ต้องการภาพจากเครื่องของคุณเอง ให้ถ่ายใหม่ตามลำดับเดิมแล้วแทนที่ไฟล์ชื่อเดียวกัน
+> ภาพหน้าจอทั้งหมดในคู่มือนี้ถ่ายจากระบบจริง (ไฟล์อยู่ใน `docs/images/`)
 
 ---
 
@@ -24,17 +23,18 @@
 
 ## 1. ภาพรวมระบบ
 
-```
-┌──────────────┐  เพิ่ม/แก้/ลบ   ┌─────────────┐   เขียน sheet1    ┌──────────────────────────┐
-│  หน้าเว็บ      │ ─────────────▶ │  Backend Go │ ────────────────▶ │  Excel (netflix_data.xlsx) │
-│  (React)     │ ◀───────────── │  + MySQL    │ ◀──────────────── │  sheet1 ข้อมูลดิบ            │
-└──────────────┘  ข้อมูล/สถิติ    └─────────────┘   ตรวจไฟล์ทุก 3 วิ   │  sheet2 วิเคราะห์ (สูตร)     │
-       ▲                                                          │  sheet3 Top 10            │
-       │ ฝังกราฟ (iframe) / ภาพ Dashboard                           │  sheet4 สรุปสำหรับ Tableau  │
-┌──────────────┐          อ่านไฟล์ Excel (sheet1 + sheet4)          └──────────────────────────┘
-│ Tableau Public│ ◀──────────────────────────────────────────────────────────────┘
-└──────────────┘
-```
+ข้อมูลไหลตามลำดับนี้
+
+| ขั้น | จาก | ไปที่ | เกิดอะไรขึ้น |
+|---|---|---|---|
+| 1 | หน้าเว็บ (React) | Backend Go + MySQL | ผู้ใช้เพิ่ม / แก้ / ลบข้อมูล → บันทึกลงตาราง `titles` |
+| 2 | Backend Go | Excel `netflix_data.xlsx` | เขียน sheet1 (ข้อมูลดิบ) ใหม่ แล้วให้ Excel คำนวณสูตร sheet2–4 ใหม่ |
+| 3 | Excel | Backend Go + MySQL | ถ้าแก้ไฟล์ Excel โดยตรง ระบบตรวจไฟล์ทุก 3 วินาที แล้วนำเข้าฐานข้อมูล |
+| 4 | Excel (sheet1 + sheet4) | Tableau | Tableau อ่านข้อมูลดิบและค่าที่ Excel คำนวณ มาทำกราฟ → publish ขึ้น Tableau Public |
+| 5 | Tableau Public | หน้าเว็บ | ฝัง Dashboard ในเมนู **กราฟ Tableau** (และภาพนิ่งสำรอง) |
+| 6 | Backend Go | หน้าเว็บ | แสดงข้อมูลและค่าที่คำนวณได้ในเมนู **ภาพรวม** |
+
+ไฟล์ Excel มี 4 sheet: **sheet1** ข้อมูลดิบ · **sheet2** วิเคราะห์ด้วยสูตร · **sheet3** Top 10 · **sheet4** สรุปสำหรับ Tableau
 
 | ส่วนประกอบ | หน้าที่ |
 |---|---|
@@ -269,17 +269,23 @@ Dashboard publish ขึ้น Tableau Public แล้ว และหน้า
 
 ![หน้ากราฟก่อนตั้งค่า](images/10_charts_empty.png)
 
-**[ใส่ภาพหน้าจอ: `images/13_tableau_overview.png` — Dashboard_Overview ในโปรแกรม Tableau]**
+หน้า **กราฟ Tableau** บนเว็บ แท็บ "ภาพรวม (Tableau)" ฝัง Dashboard จาก Tableau Public (เลื่อนดู / ชี้เมาส์ดูค่า / สลับ sheet ด้านบนได้):
 
-**[ใส่ภาพหน้าจอ: `images/14_tableau_details.png` — Dashboard_Details ในโปรแกรม Tableau]**
+![หน้ากราฟ Tableau แบบโต้ตอบ](images/15_web_charts.png)
 
-**[ใส่ภาพหน้าจอ: `images/15_web_charts.png` — หน้า กราฟ Tableau บนเว็บที่แสดง Dashboard แล้ว]**
+แท็บ "Dashboard Overview (ภาพ)" แสดงภาพนิ่ง ใช้ได้แม้ไม่มีอินเทอร์เน็ต:
 
-ภาพ Dashboard จาก Tableau Public:
+![หน้ากราฟ Tableau แบบภาพ](images/16_web_charts_image.png)
 
-![Dashboard Overview](../data/tableau/01_Dashboard_Overview.png)
+**Dashboard_Overview** (tableau_netflix2) — KPI, สัดส่วน TV/Film, ค่าเฉลี่ย vs มัธยฐาน, Netflix Title vs Non-Netflix, ฉายทั่วโลก, ความยาว, ปีที่ออกฉาย, Pareto
+(ข้อมูลจาก `sheet4_TableauSummary` = ค่าที่ Excel คำนวณใน sheet2–3)
 
-![Dashboard Details](../data/tableau/02_Dashboard_Details.png)
+![Dashboard Overview](images/13_tableau_overview.png)
+
+**Dashboard_Details** (tableau_netflix2) — Top 10 Film, Top 10 TV, Runtime กับยอดดู (scatter)
+(ข้อมูลจาก `sheet1_RawData`)
+
+![Dashboard Details](images/14_tableau_details.png)
 
 ---
 
