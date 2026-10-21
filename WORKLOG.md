@@ -383,3 +383,11 @@
 - `13_tableau_overview.png`, `14_tableau_details.png` = ภาพ Dashboard ที่ render จาก Tableau Public → ไม่มีช่อง `[ใส่ภาพหน้าจอ]` เหลือในคู่มือ
 - แผนภาพระบบแบบตัวอักษร (ASCII) เพี้ยนเมื่อมีภาษาไทย → เปลี่ยนเป็นตารางลำดับการไหลของข้อมูล 6 ขั้น
 - แปลง `docs/USER_MANUAL.md` → **`docs/USER_MANUAL.docx`** ด้วย pandoc 3.11 (Docker) + แม่แบบ `docs/reference.docx` (Tahoma, ตารางมีเส้นขอบ/หัวตารางตัวหนา, ภาษา bidi = th-TH) · ภาพฝังครบ 15 ภาพ · ตรวจหน้าตาโดยแปลงเป็น PDF ด้วย LibreOffice Writer (20 หน้า)
+
+## 18. แก้ไฟล์ tableau_netflix2.twbx ในเครื่อง (21 ต.ค. 2026)
+
+- ผู้ใช้กด ⌘S แล้ว แต่ไฟล์ในเครื่องยังเป็นของ 18 ต.ค. 23:55 (ยังมี data source `netflix_data` ที่เสีย) — ใน Tableau Public, Save = บันทึกขึ้น cloud
+- ดาวน์โหลดเวอร์ชันที่ publish (rev 1.4, อัปเดต 21 ต.ค. 12:11) จาก `https://public.tableau.com/workbooks/tableau_netflix2.twb` มาเทียบ:
+  worksheet ทั้ง 14 อันเหมือนไฟล์ในเครื่องทุกอย่าง (ต่างแค่ phone layout ที่ Tableau สร้างเอง) และ Tableau ตัด data source ที่เสียออกแล้ว แต่ก็ตัดลิงก์ไปไฟล์ Excel ออกด้วย
+- จึงแก้ไฟล์ในเครื่องแทน: ลบ `<datasource caption='netflix_data'>` (ไม่มีที่อ้างถึง) → ยังลิงก์ `data/netflix_data.xlsx` ไว้ให้ Refresh ได้ · ไฟล์เดิมเก็บที่ `old_tableau_versions/tableau_netflix2_before_fix_2355.twbx`
+- ภาพ Dashboard จาก Tableau Public ดึงใหม่แล้ว เหมือนเดิมทุกไบต์

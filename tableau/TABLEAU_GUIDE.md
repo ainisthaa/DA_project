@@ -25,6 +25,7 @@
 | กราฟ | ผล |
 |---|---|
 | 09_Top10_Film, 09_Top10_TV | Sort by Field: SUM(Views) มาก→น้อย — ลำดับตรงกับ Excel และจะเรียงใหม่เองเมื่อข้อมูลเปลี่ยน |
+| data source `netflix_data` ที่เสีย (ทำให้ publish error) | ลบออกแล้ว (21 ต.ค.) — เหลือ 2 data source ที่กราฟใช้ |
 | 07_Release_Year (Line), 07_Release_Year_Titles (Bar) | แกนปีเรียง ≤2015, 2016, 2017 … 2026 ถูกต้อง |
 | 06_Runtime_Views | เรียง Film <1.5h … TV >10h ถูกต้อง |
 
@@ -38,7 +39,6 @@
 
 | # | เรื่อง | วิธีแก้ใน Tableau |
 |---|---|---|
-| 1 | data source `netflix_data` ไม่มีกราฟใช้ และชี้ไปไฟล์ชั่วคราวในเครื่อง (เปิดเครื่องอื่นอาจขึ้นเตือน) | แถบ Data ด้านซ้าย → คลิกขวา `netflix_data` → **Close** |
 | 2 | ชื่อ worksheet 5 อันมีช่องว่างนำหน้า (07_Release_Year_Titles, 08_Pareto, 09_Top10_Film, 09_Top10_TV, 10_Runtime_Scatter) | ดับเบิลคลิกแท็บด้านล่าง → ลบช่องว่าง |
 | 3 | หัวกราฟบน Dashboard เป็นชื่อ sheet เช่น `01_KPI` | ดับเบิลคลิกหัวกราฟ → พิมพ์ชื่อที่อ่านรู้เรื่อง |
 | 4 | 10_Runtime_Scatter แกน Y (log) เริ่มที่ 1 ครึ่งล่างว่าง | คลิกขวาแกน Y → **Edit Axis** → Fixed Start = `50,000` |
@@ -157,6 +157,8 @@
 
 ### 4.1 ภาพ Dashboard สำหรับแสดงบนเว็บ (ใช้ได้ออฟไลน์)
 
+> **Tableau Public: ⌘S / File → Save บันทึกขึ้น Tableau Public (cloud) ไม่ได้เขียนไฟล์ .twbx ในเครื่อง** — ถ้าต้องการไฟล์ล่าสุด ดาวน์โหลดได้จาก `https://public.tableau.com/workbooks/tableau_netflix2.twb` (ได้ .twbx แต่จะไม่มีลิงก์ไปที่ไฟล์ Excel ต้อง Edit Data Source ก่อน Refresh)
+>
 > **Tableau Public ไม่มีเมนู Export Image** (มีเฉพาะ Tableau Desktop) → ใช้วิธีดึงภาพจาก Tableau Public หลัง publish:
 > เปิด `https://public.tableau.com/views/<ชื่อ workbook>/<ชื่อ dashboard>.png?:display_static_image=y` ในเบราว์เซอร์ → บันทึกภาพ
 > หรือในหน้า viz กด **Download → Image** แล้วบันทึกลง `data/tableau/` ตามชื่อด้านล่าง
