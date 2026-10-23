@@ -56,7 +56,9 @@ https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2026
 
 ## สร้างคู่มือ .docx ใหม่ (หลังแก้ `docs/USER_MANUAL.md`)
 
-ใช้ pandoc ผ่าน Docker (ไม่ต้องติดตั้งเพิ่ม) · `docs/reference.docx` คือแม่แบบ (ฟอนต์ Tahoma รองรับภาษาไทย, ตารางมีเส้นขอบ)
+ถ้าแก้โค้ดในไฟล์ที่ยกมาในหัวข้อ 9.5–9.6 ของคู่มือ ให้แก้โค้ดที่ยกมาและเลขบรรทัดในคู่มือให้ตรงด้วย
+
+ใช้ pandoc ผ่าน Docker (ไม่ต้องติดตั้งเพิ่ม) · `docs/reference.docx` คือแม่แบบ (ฟอนต์ Tahoma รองรับภาษาไทย, ตารางมีเส้นขอบ, โค้ด 9pt)
 
 ```bash
 docker run --rm -v "$PWD":/proj -w /proj/docs pandoc/core:latest USER_MANUAL.md -f gfm -t docx \
